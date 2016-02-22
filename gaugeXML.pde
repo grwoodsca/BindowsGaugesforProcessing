@@ -4,6 +4,7 @@ class GaugeXML{
   
   /* Class Variables */
   XML tree;
+  Table webColours;
   int defaultOrigin;
   Gauge gauge;
 
@@ -18,8 +19,17 @@ class GaugeXML{
       tree=loadXML(filename);
     } catch (Exception e) {
       // the XML file could not be found.
-      xmlEvent("The file doesn't exixt");
+      xmlEvent("The gauge file doesn't exist");
     }
+  // Load the webColours table from file
+    try{
+//      webColours=loadTable("Data/john/Documents/Images/Guage_xml/color_codes.csv","header");
+      webColours=loadTable(dataPath("color_codes.csv"),"header");
+    } catch (Exception e) {
+      // the XML file could not be found.
+      xmlEvent("Colours file doesn't exist");
+    }
+      
     coordWidth=tree.getInt("coordWidth",100);
     coordHeight=tree.getInt("coordHeight",100);
     defaultOrigin=coordWidth;      //define a default center of origin based on overall coordinates of gauge
@@ -31,6 +41,8 @@ class GaugeXML{
         gauge.addBorder(fillBorder(tree.getChild(i)));
       }else if (children[i].equals("Gauge2RadialRange")){
         gauge.addRange(fillRange(tree.getChild(i)));
+      }else if (children[i].equals("Gauge2Label")){
+        gauge.addLabel(fillLabel(tree.getChild(i)));
       }
     }
 //    gauge.numNeedles=numneedles;
@@ -63,8 +75,9 @@ class GaugeXML{
     }
     border=new RadialBorder(int(x),int(y),diameter,int(strokeWidth),stringToColor(strokeColour));
     if (!rb.hasChildren()){xmlEvent("No colours for border");}
-    for (int i=0; i<rb.listChildren().length; i++){
-      if (rb.getChild(i).getName().equals("Gauge2CircularBorder.Filler")){
+    String [] children=rb.listChildren();
+    for (int i = 0; i < children.length; i++){
+      if (children[i].equals("Gauge2CircularBorder.Filler")){
         border.setIsGradient(fillBorderColour(rb.getChild(i),border));
         flag=true;
         break;
@@ -79,14 +92,15 @@ class GaugeXML{
   Boolean fillBorderColour(XML filler, RadialBorder border){
     Boolean flag=false;
     if (!filler.hasChildren()){xmlEvent("Error in XML at .Filler");}
-    for (int i=0; i<filler.listChildren().length; i++){
-      if(filler.getChild(i).getName().equals ("Gauge2RingGradientFiller")){
+    String [] children=filler.listChildren();
+    for (int i = 0; i < children.length; i++){
+      if(children[i].equals ("Gauge2RingGradientFiller")){
         border.addColour(fillRadialGradient(filler.getChild(i)));
         border.addRing(fillRingGradient(filler.getChild(i)));
         flag=true;
-      }else if (filler.getChild(i).getName().equals ("Gauge2PlainColorFiller")){
+      }else if (children[i].equals ("Gauge2PlainColorFiller")){
         border.addColour(fillPlainColour(filler.getChild(i)));
-      }else if (filler.getChild(i).getName().equals ("Gauge2RadialGradientFiller")){
+      }else if (children[i].equals ("Gauge2RadialGradientFiller")){
       border.addColour(fillRadialGradient(filler.getChild(i)));
       flag=true;
       } 
@@ -111,6 +125,16 @@ class GaugeXML{
     return(new GradientRing(thickness,hiliteCentre,xpos,ypos));
   }
   int stringToColor(String c){
+    if (!c.substring(0,0).equals("#")){
+//      Boolean f=false;
+      for (TableRow row : webColours.rows()){
+        if (c.equals(row.getString(0))){
+          c=row.getString(1);
+//          f=true;
+          break;
+        }
+      }
+    }
     return(0xFF000000+unhex(c.substring(1)));
   }
     
@@ -125,13 +149,14 @@ class GaugeXML{
     startAngle=rr.getFloat("startAngle",0);
     endAngle=rr.getInt("endAngle",360);
     range=new RadialRange(rwidth/2,rheight/2,startAngle,endAngle);
-    for (int i=0; i<rr.listChildren().length; i++){
-      if (rr.getChild(i).getName().equals("Gauge2RadialScale")){
+    String [] children=rr.listChildren();
+    for (int i = 0; i < children.length; i++){
+      if (children[i].equals("Gauge2RadialScale")){
           range.addScale(fillScale(rr.getChild(i),range));
-      }else if (rr.getChild(i).getName().equals("Gauge2RadialTicks")){
+      }else if (children[i].equals("Gauge2RadialTicks")){
         range.addTicks(fillTicks(rr.getChild(i)));
-      }else if (rr.getChild(i).getName().equals("Gauge2BasicCap")){
-        range.addCap(fillCap(rr.getChild(i)));
+      }else if (children[i].equals("Gauge2BasicCap")){
+        range.addCap(fillCap(rr.getChild(i),range));
       }      
     }
     return(range);
@@ -151,11 +176,17 @@ class GaugeXML{
     labelCount=rs.getInt("labelCount",0);
     scale=new RadialScale(radius, font, startValue, endValue, labelCount,stringToColor(textColour));
     if (rs.hasChildren()){
-      if ( rs.getChild("Gauge2RadialScaleSection") != null){
-        scale.addFace(fillFace(rs.getChild("Gauge2RadialScaleSection"))); 
-      }else if (rs.getChild("Gauge2RadialArrowNeedle") != null){
-        gauge.registerNeedle(gauge.numRanges,r.numScales,scale.numNeedles);   
-        scale.addNeedle(fillNeedle(rs.getChild("Gauge2RadialArrowNeedle")));
+      String [] children=rs.listChildren();
+      for (int i = 0; i < children.length; i++){
+        if ( children[i].equals("Gauge2RadialScaleSection")){
+         scale.addFace(fillFace(rs.getChild(i))); 
+        }else if (children[i].equals("Gauge2RadialArrowNeedle")){
+          gauge.registerNeedle(gauge.ranges.size(),r.scales.size(),scale.needles.size());   
+          scale.addNeedle(fillArrow(rs.getChild(i)));
+        }else if (children[i].equals("Gauge2RadialNeedle")){
+         gauge.registerNeedle(gauge.ranges.size(),r.scales.size(),scale.needles.size());  
+         scale.addNeedle(fillNeedle(rs.getChild(i)));
+        }
       }
     }
     return(scale);
@@ -182,7 +213,7 @@ class GaugeXML{
 
   RadialNeedle fillNeedle(XML rn){
     RadialNeedle needle;
-    int value,strokeWidth,nlength,innerRadius,outerRadius,innerWidth,outerWidth;
+    int value,strokeWidth,innerRadius,outerRadius,innerWidth,outerWidth;
     String id,strokeColour;
     id=rn.getString("id","");
     value=rn.getInt("value",0);
@@ -192,19 +223,40 @@ class GaugeXML{
     innerWidth=rn.getInt("innerWidth",0);
     outerRadius=rn.getInt("outerRadius",defaultOrigin);
     outerWidth=rn.getInt("outerWidth",0);
-    nlength=rn.getInt("pointerLength",(outerRadius-innerRadius)/3);
-    needle=new RadialNeedle(id,stringToColor(strokeColour),strokeWidth,nlength,
+    needle=new RadialNeedle(id,stringToColor(strokeColour),strokeWidth,
            innerRadius,outerRadius,innerWidth,outerWidth,value);
     if (!rn.hasChildren()){xmlEvent("Error in XML; needle has no colour");}
-    fillNeedleColour(rn,needle);
+    String [] children=rn.listChildren();
+    for (int i = 0; i < children.length; i++){
+      if (children[i].equals("Gauge2RadialNeedle.Filler")){
+        fillNeedleColour(rn.getChild(i),needle);
+        break;
+      }
+    }
     return(needle);
   }
-  
+
+    RadialNeedle fillArrow(XML rn){
+    RadialNeedle needle=fillNeedle(rn);
+    int nlength=rn.getInt("pointerLength",(needle.outerRadius-needle.innerRadius)/3);
+    needle.setNlength(nlength);
+    return(needle);
+  }
+
   void fillNeedleColour(XML rn, RadialNeedle n){
-    for (int i=0; i<rn.listChildren().length; i++){
-      if (rn.getChild(i).getName().equals("Gauge2RadialArrowNeedle.Filler")){
-        n.setGradient(true);
-        n.needleColour=fillRadialGradient(rn.getChild(i).getChild("Gauge2RadialGradientFiller"));
+    String [] children=rn.listChildren();
+    for (int i = 0; i < children.length; i++){
+      if(children[i].equals ("Gauge2RingGradientFiller")){
+        n.colour=(fillRadialGradient(rn.getChild(i)));
+        n.isGradient=true;
+        break;
+      }else if (children[i].equals ("Gauge2PlainColorFiller")){
+        n.colour=(fillPlainColour(rn.getChild(i)));
+        n.isGradient=false;        
+        break;
+      }else if (children[i].equals ("Gauge2RadialGradientFiller")){
+        n.colour=(fillRadialGradient(rn.getChild(i)));
+        n.isGradient=true;
         break;
       }
     }
@@ -226,7 +278,7 @@ class GaugeXML{
 
 //  RadialCap(int d, int w, color s){
 
-  RadialCap fillCap(XML rc){
+  RadialCap fillCap(XML rc,RadialRange rr){
     RadialCap cap;
     int diameter,strokeWidth,cWidth, cHeight;
     String strokeColour;
@@ -240,18 +292,31 @@ class GaugeXML{
     }
     strokeWidth=rc.getInt("strokeWidth",0);
     strokeColour=rc.getString("stroke","#0");
-    cap=new RadialCap(diameter,strokeWidth,stringToColor(strokeColour));
+    cap=new RadialCap(diameter,strokeWidth,stringToColor(strokeColour),rr);
     if (!rc.hasChildren()){ xmlEvent("Error in XML Cap has no colour");}
-    for (int i=0; i<rc.listChildren().length; i++){
-      if (rc.getChild(i).getName().equals("Gauge2BasicCap.Filler")){
-        cap.isGradient=true;
-        cap.colour=fillRadialGradient(rc.getChild(i).getChild("Gauge2RingGradientFiller"));
-        cap.ring=fillRingGradient(rc.getChild(i).getChild("Gauge2RingGradientFiller"));
+      String [] children=rc.listChildren();
+      for (int i = 0; i < children.length; i++){
+      if (children[i].equals("Gauge2BasicCap.Filler")){
+        cap.getBorder().isGradient=true;
+        cap.getBorder().colour=fillRadialGradient(rc.getChild(i).getChild("Gauge2RingGradientFiller"));
+        cap.getBorder().ring=fillRingGradient(rc.getChild(i).getChild("Gauge2RingGradientFiller"));
         flag=true;
         break;
       }
     }
     if (!flag){ xmlEvent("Error in XML at Cap");}
     return(cap);   
+  }
+  Label fillLabel(XML l){
+    String font,xA,yA,text,textColour;
+    int x,y;    
+    font=l.getString("font","50 Verdana");
+    textColour=l.getString("foreColor","#0");
+    xA=l.getString("anchorHorizontal","center");
+    yA=l.getString("anchorVertical","center");
+    x=l.getInt("x",defaultOrigin);
+    y=l.getInt("y",defaultOrigin);
+    text=l.getString("text","-");
+    return( new Label(x,y,xA,yA,stringToColor(textColour),text,font));    
   }
 }

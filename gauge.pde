@@ -1,94 +1,94 @@
 class Gauge{
 /* Class Constants */
-  static final int MAX_BORDERS=10;
-  static final int MAX_RANGES=10;
-  static final int MAX_NEEDLES=10;
-  
+ 
 /* Class object arrays */
-   RadialBorder [] borders;
-  int numBorders;
-   RadialRange [] ranges;
-  int numRanges;
-  NeedlePointer [] needles;  //Saves range indices containing needles
-  int numNeedles;
+  ArrayList<RadialBorder> borders;
+//  int numBorders;
+  ArrayList<RadialRange> ranges;
+//  int numRanges;
+  ArrayList<NeedlePointer> needles;  //Saves range indices containing needles
+//  int numNeedles;
+  ArrayList <Label> labels;
   
 /* Class Variables */
   int gWidth,gHeight;
 
-  Gauge(int Gw, int Gh, RadialBorder[] rb, RadialRange[] rr,NeedlePointer[] rn){
+  Gauge(int Gw, int Gh, ArrayList<RadialBorder> rb, ArrayList<RadialRange> rr,ArrayList<NeedlePointer> rn, ArrayList<Label> l){
     gWidth=Gw;
     gHeight=Gh;
     borders= rb;
     ranges= rr;
     needles=rn;
-    numBorders=0;
-    numRanges=0;
-    numNeedles=0;
+    labels=l;
+//    numBorders=0;
+//    numRanges=0;
+//    numNeedles=0;
   }
   Gauge(int gWidth, int gHeight){
-    this(gWidth, gHeight, new RadialBorder[MAX_BORDERS], new RadialRange[MAX_RANGES],new NeedlePointer[MAX_NEEDLES]);
+    this(gWidth, gHeight, new ArrayList<RadialBorder>(), new ArrayList<RadialRange>(),new ArrayList<NeedlePointer>(),new ArrayList<Label>());
   }
   Gauge(){
-   this(width/2, height/2, new RadialBorder[MAX_BORDERS], new RadialRange[MAX_RANGES],new NeedlePointer[MAX_NEEDLES]);
+   this(width/2, height/2, new ArrayList<RadialBorder>(), new ArrayList<RadialRange>(),new ArrayList<NeedlePointer>(),new ArrayList<Label>());
   }
 
   void gaugeEvent(String message){
     println(message);
     exit();
   }
-  void addBorders(RadialBorder[] rb){
-    borders= rb;    
+  void addBorders(ArrayList<RadialBorder> rb){
+    borders=rb;    
   }
-  RadialBorder getborder(int i){ //need error check for out of range index
-    if (i >= numBorders){gaugeEvent("Index out of range");}
-    return (borders[i]);
+  RadialBorder getborder(int i){ 
+    if (i >= borders.size()){gaugeEvent("Border index out of range");}
+    return (borders.get(i));
   }
   void addBorder(RadialBorder rb){
-    if (numBorders >= MAX_BORDERS){gaugeEvent("Too many borders");}
-    borders[numBorders++]=rb;
+    borders.add(rb);
   }
-  void setBorder(RadialBorder rb, int i){
-    if (i >= MAX_BORDERS){gaugeEvent("Index out of range");}
-    borders[i]=rb;
-  }
-  void addRanges(RadialRange[] rr){
+  void addRanges(ArrayList<RadialRange> rr){
     ranges= rr;
   }
-    RadialRange getRange(int i){
-      if (i >= numRanges){gaugeEvent("Index out of range");}
-      return (ranges[i]);
+  RadialRange getRange(int i){
+    if (i >= ranges.size()){gaugeEvent("Range index out of range");}
+    return (ranges.get(i));
   }
-    void addRange(RadialRange rr){
-      if (numRanges >= MAX_BORDERS){gaugeEvent("Too many ranges");}
-println("gauge range added",numRanges);
-      ranges[numRanges++]=rr;
+  void addRange(RadialRange rr){
+    ranges.add(rr);
   }
-    void setRange(RadialRange rr, int i){
-      if (i >= MAX_RANGES){gaugeEvent("Index out of range");}
-      ranges[i]=rr;
+
+  void addLabesl(ArrayList<Label> l){
+    labels= l;
   }
+  Label getLabel(int i){
+    if (i >= labels.size()){gaugeEvent("Label index out of range");}
+    return (labels.get(i));
+  }
+  void addLabel(Label l){
+    labels.add(l);
+  }
+
   int getNumNeedles(){
-    return(numNeedles);
+    return(needles.size());
   }
-  void setNeedleValue(String ID,int value){  
+  Boolean setNeedleValue(String ID,int value){  
     Boolean found=false;
     RadialNeedle needle;
-    for (int i=0; i<needles.length;i++){
-      needle=ranges[needles[i].rindex].scales[needles[i].sindex].needles[needles[i].nindex];
+    for (int i=0; i<needles.size();i++){
+      needle=ranges.get(needles.get(i).rindex).scales.get(needles.get(i).sindex).needles.get(needles.get(i).nindex);
       if (needle.getID().equals(ID)){
         needle.setValue(value);
         found=true;
         break;
       }
     }
-    if (! found){gaugeEvent("Needle not found");}
+    return(found);
   }
   int getNeedleValue(String ID){  
     RadialNeedle needle;
     int value=0;
     Boolean found=false;
-    for (int i=0; i<needles.length;i++){
-      needle=ranges[needles[i].rindex].scales[needles[i].sindex].needles[needles[i].nindex];
+    for (int i=0; i<needles.size();i++){
+      needle=ranges.get(needles.get(i).rindex).scales.get(needles.get(i).sindex).needles.get(needles.get(i).nindex);
       if (needle.getID().equals(ID)){
         value=needle.getValue();
         found = true;
@@ -99,27 +99,30 @@ println("gauge range added",numRanges);
     return (value);
   }
   void draw(){
-    for (int i=0;i<numBorders;i++){
-      borders[i].draw();
-    }
-    for (int i=0;i<numRanges;i++){
-      ranges[i].draw();
-    }    
+    drawBorders();
+    drawLabels();
+    drawRanges();
   }
   void drawBorders(){
-    for (int i=0;i<numBorders;i++){
-      borders[i].draw();
+    for (RadialBorder border:borders){
+      border.draw();
     }
   }
   void drawRanges(){
-    for (int i=0;i<numRanges;i++){
-      ranges[i].draw();
+    for (RadialRange range:ranges){
+      range.draw();
     }    
   }
 
+  void drawLabels(){
+    for (Label label:labels){
+      label.draw();
+    }    
+  }
+
+
   void registerNeedle(int r, int s, int n){
-      if (numNeedles >= MAX_NEEDLES){gaugeEvent("Too many Needles");}
-      needles[numNeedles++]=new NeedlePointer(r,s,n);
+      needles.add(new NeedlePointer(r,s,n));
   }
 }
 
