@@ -1,6 +1,3 @@
-/* 
-To Do - split into multiple sub classes of needle types
-*/
   class RadialNeedle{
     static final int MAX_COLOURS=2;
     static final int STEPS=16;
@@ -23,6 +20,20 @@ To Do - split into multiple sub classes of needle types
       isGradient=false;
 //      needle=shapeNeedle();
     }
+    RadialNeedle(){
+      this("-",0,0,0,0,0,0,0);
+    }
+    void fillNeedlefromXML(XML rn){
+      ID=rn.getString("id","");
+      value=rn.getInt("value",0);
+      strokeColour=tree.stringToColor(rn.getString("stroke","#0"));
+      strokeWidth=rn.getInt("strokeWidth",0);
+      innerRadius=rn.getInt("innerRadius",0);
+      innerWidth=rn.getInt("innerWidth",0);
+      outerRadius=rn.getInt("outerRadius",gauge.defaultOrigin);
+      outerWidth=rn.getInt("outerWidth",0);
+    }
+    
     int getValue(){
       return(value);
     }
@@ -96,9 +107,18 @@ class RadialArrow extends RadialNeedle{
   super(ID,strokeColour,strokeWidth,innerRadius,outerRadius,innerWidth,outerWidth,value); 
   nlength=0;
   }
+  RadialArrow(){
+    this("-",0,0,0,0,0,0,0);
+  }
   void setNlength(int l){
     nlength=l;
   }
+
+  void fillNeedlefromXML(XML rn){
+    setNlength(rn.getInt("pointerLength",(outerRadius-innerRadius)/3));
+    super.fillNeedlefromXML(rn);
+  }
+
     /* Need to create the shape around the origin 
     so that shapeMode(CENTER) works correctly 
     Origin is top left; y goes down; x goes left */

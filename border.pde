@@ -18,7 +18,26 @@ class RadialBorder{
     ring=new GradientRing();   
   }    
   RadialBorder(int xpos, int ypos) {
-    this(xpos,ypos,xpos,0,0);
+    this(xpos,ypos,xpos*2,0,0);
+  }
+
+  RadialBorder() {
+    this(0,0,0,0,0);
+  }
+
+  void fillBorderfromXML(XML rb){
+    int bHeight,bWidth;
+    x=rb.getInt("centerX",gauge.defaultOrigin/2);
+    y=rb.getInt("centerY",gauge.defaultOrigin/2);
+    bHeight=rb.getInt("height",gauge.defaultOrigin);
+    bWidth=rb.getInt("width",gauge.defaultOrigin);
+    strokeWeight=rb.getInt("strokeWidth",0);
+    strokeColour=tree.stringToColor(rb.getString("stroke","#0"));
+    if (bHeight>bWidth){
+    diameter=bWidth; 
+    }else{
+    diameter=bHeight;  
+    }
   }
 
   void borderEvent(String message) {
@@ -60,5 +79,9 @@ class RadialBorder{
   }
   void setIsGradient(Boolean f){
     isGradient=f;
+  }
+  void setCentre(int xpos, int ypos){
+    x=xpos;
+    y=ypos;
   }
 }

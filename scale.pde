@@ -7,24 +7,32 @@ class RadialScale{
     ArrayList<RadialNeedle> needles;
     PFont f;
     RadialScale(int r, String fo, int sv, int ev, int tc, color c){
+      font=fo;
       radius=r;
-      sbk=fo.indexOf(" ");    //first blank in string to separate the text size from font name
-      textSize=int(fo.substring(0,sbk-1))*5; //Enlarge font size to convert between js and processing
-      font=fo.substring(sbk+1);
       textCount=tc;
       textColour=c;
       startValue=sv;
       endValue=ev;
-      f = createFont(font,textSize);
       faces=new ArrayList<RadialRangeFace>();
       needles=new ArrayList<RadialNeedle>();
     }
-/* 
-    should convert this into a proper exception handler
-*/
-    void scaleEvent(String message) {
-      println(message);
+    RadialScale(){
+      this(0,"-",0,0,0,0);
     }
+    
+    void fillScalefromXML(XML rs){
+      String fo=rs.getString("font","50 Verdana");
+      textColour=tree.stringToColor(rs.getString("foreColor","#0"));
+      radius=rs.getInt("radius",gauge.defaultOrigin);
+      startValue=rs.getInt("startValue",0);
+      endValue=rs.getInt("endValue",360);
+      textCount=rs.getInt("labelCount",0);
+      sbk=fo.indexOf(" ");    //first blank in string to separate the text size from font name
+      textSize=int(fo.substring(0,sbk-1))*5; //Enlarge font size to convert between js and processing
+      font=fo.substring(sbk+1);
+      f = createFont(font,textSize);
+    }
+
 
     /* Scale can be clockwise or counter-clockwise */    
     void drawScale(RadialRange rr){
@@ -48,6 +56,7 @@ class RadialScale{
       }
 
     }
+
     void draw(RadialRange rr){
       for (RadialRangeFace face:faces){
         face.draw(rr,this);
@@ -66,6 +75,5 @@ class RadialScale{
   
     void addNeedle(RadialNeedle rn){
       needles.add(rn);
-    }
- 
+    } 
   }

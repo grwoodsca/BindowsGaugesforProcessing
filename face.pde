@@ -10,6 +10,18 @@ class RadialRangeFace{                        //draws an arc
   strokeStartAngle=sv;
   strokeEndAngle=se;
   }
+  RadialRangeFace(){
+    this(0,0,0,0,0,0,0);
+  }
+  void fillFacefromXML(XML rf){
+    thickness=rf.getInt("sectionWidth",0);
+    fillColour=tree.stringToColor(rf.getString("color","#0"));
+    strokeColour=tree.stringToColor(rf.getString("stroke","#0"));
+    strokeWeight=rf.getInt("strokeWidth",0);
+    strokeDiameter=rf.getInt("radius",0);
+    strokeStartAngle=rf.getInt("startValue",0);
+    strokeEndAngle=rf.getInt("endValue",360);
+  }
   void draw(RadialRange rr,RadialScale rs){
     int wid=rs.radius*thickness/100;
     int r=rs.radius*2-wid;

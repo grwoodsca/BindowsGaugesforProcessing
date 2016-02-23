@@ -18,6 +18,18 @@ class RadialRange{
     ticks=new ArrayList<RadialTicks>();
     caps=new ArrayList<RadialCap>();
   }
+
+  RadialRange(){
+    this(0,0,0.0,0.0);
+  }
+
+  void fillRangefromXML(XML rr){
+    x=rr.getInt("width",gauge.defaultOrigin)/2;
+    y=rr.getInt("height",gauge.defaultOrigin)/2;
+    startAngle=rr.getFloat("startAngle",0);
+    endAngle=rr.getInt("endAngle",360);
+  }
+
   void rangeEvent(String message) {
     println(message);
   }
@@ -25,7 +37,6 @@ class RadialRange{
   void addScale(RadialScale rs){
     scales.add(rs);
   }
-
 
   void addTicks(RadialTicks rt){
     ticks.add(rt);

@@ -3,12 +3,11 @@ class Gauge{
  
 /* Class object arrays */
   ArrayList<RadialBorder> borders;
-//  int numBorders;
   ArrayList<RadialRange> ranges;
-//  int numRanges;
   ArrayList<NeedlePointer> needles;  //Saves range indices containing needles
-//  int numNeedles;
   ArrayList <Label> labels;
+ /* Global Variables */ 
+  int defaultOrigin;
   
 /* Class Variables */
   int gWidth,gHeight;
@@ -31,6 +30,14 @@ class Gauge{
    this(width/2, height/2, new ArrayList<RadialBorder>(), new ArrayList<RadialRange>(),new ArrayList<NeedlePointer>(),new ArrayList<Label>());
   }
 
+  void fillGaugefromXML(XML g){
+    gWidth=g.getInt("coordWidth",100);
+    gHeight=g.getInt("coordHeight",100);
+      //define a default center of origin based on overall coordinates of gauge
+    defaultOrigin=gWidth;            
+    if(gHeight<defaultOrigin){defaultOrigin=gHeight;}
+  }
+  
   void gaugeEvent(String message){
     println(message);
     exit();
@@ -120,7 +127,6 @@ class Gauge{
     }    
   }
 
-
   void registerNeedle(int r, int s, int n){
       needles.add(new NeedlePointer(r,s,n));
   }
@@ -135,5 +141,6 @@ class NeedlePointer{
     nindex=n;
   }
 }
+
 
   
